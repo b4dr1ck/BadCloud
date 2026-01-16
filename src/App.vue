@@ -16,6 +16,12 @@ export default {
   },
 
   mounted() {
+    // set URL for production
+    if (!import.meta.env.DEV) {
+      this.url = location.href + "fileRequest.py";
+    }
+
+    // fetch initial file list
     this.fetchData({ task: "list" }, (data) => {
       this.fileList = data;
     });
@@ -36,7 +42,6 @@ export default {
           this.loading = false;
         });
     },
-
     uploadFiles(files) {
       const body = {
         task: "upload",
