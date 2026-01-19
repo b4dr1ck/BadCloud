@@ -5,6 +5,7 @@ export default {
   name: "App",
   data() {
     return {
+      checkedFiles: [],
       dialog: false,
       log: "",
       errorTitle: "",
@@ -46,6 +47,8 @@ export default {
   methods: {
     fetchData(body, callback) {
       this.loading = true;
+      this.checkedFiles = [];
+
       fetch(this.url, {
         method: "POST",
         headers: {
@@ -71,33 +74,44 @@ export default {
         });
     },
     deleteFile(_event, filename) {
+      filename = [filename];
+      if (this.checkedFiles.length > 0) {
+        filename = this.checkedFiles;
+      }
       this.snackbar = true;
       const body = {
         task: "delete",
-        files: [filename],
+        files: filename,
       };
 
       this.fetchData(body, (data) => {
         this.fileList = data.files;
-        this.log = `${filename} deleted successfully.`;
+        this.log = `Files(s) deleted successfully.`;
       });
     },
     downloadFiles(_event, filenames) {
+      filenames = [filenames];
+
+      if (this.checkedFiles.length > 0) {
+        filenames = this.checkedFiles;
+      }
+
       this.snackbar = true;
       const body = {
         task: "download",
-        files: [filenames],
+        files: filenames,
       };
 
       this.fetchData(body, (data) => {
-        const link = document.createElement("a");
-        const files = data.files;
-        link.href = files[0].content;
-        link.download = files[0].filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        this.log = `${files[0]} downloaded successfully.`;
+        data.files.forEach((file) => {
+          const link = document.createElement("a");
+          link.href = file.content;
+          link.download = file.filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          this.log = `File(s) downloaded successfully.`;
+        });
       });
     },
 
@@ -143,7 +157,7 @@ export default {
       Promise.all(filesPromises).then(() => {
         this.fetchData(body, (data) => {
           this.fileList = data.files;
-          this.log = `Files uploaded successfully.`;
+          this.log = `File(s) uploaded successfully.`;
         });
       });
     },
@@ -186,13 +200,14 @@ export default {
             <td class="text-blue font-weight-bold">{{ item.filename }}</td>
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
-            <td>
+            <td class="d-flex align-center">
               <v-btn @click="downloadFiles($event, item.filename)" title="Download" icon class="mr-2">
                 <v-icon icon="mdi-download"></v-icon>
               </v-btn>
               <v-btn @click="deleteFile($event, item.filename)" title="Delete" icon>
                 <v-icon icon="mdi-delete"></v-icon>
               </v-btn>
+              <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
             </td>
           </tr>
         </template>
