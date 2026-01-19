@@ -5,6 +5,7 @@ export default {
   name: "App",
   data() {
     return {
+      compact: false,
       checkedFiles: [],
       typeIcons: {
         image: "mdi-file-image",
@@ -50,6 +51,18 @@ export default {
     });
   },
 
+  computed: {
+    filteredFiles() {
+      if (!this.search) {
+        return this.fileList;
+      }
+      const searchTerm = this.search.toLowerCase();
+      return this.fileList.filter((file) =>
+        file.filename.toLowerCase().includes(searchTerm)
+      );
+    },
+  },
+
   methods: {
     fetchData(body, callback) {
       this.loading = true;
@@ -70,6 +83,7 @@ export default {
             this.errorTitle = "Error";
             this.errorMsg = data.message;
             this.dialog = true;
+            this.snackbar = false;
           }
         })
         .catch((error) => {
@@ -84,7 +98,6 @@ export default {
       if (this.checkedFiles.length > 0) {
         filename = this.checkedFiles;
       }
-      this.snackbar = true;
       const body = {
         task: "delete",
         files: filename,
@@ -92,6 +105,7 @@ export default {
 
       this.fetchData(body, (data) => {
         this.fileList = data.files;
+        this.snackbar = true;
         this.log = `Files(s) deleted successfully.`;
       });
     },
@@ -102,7 +116,6 @@ export default {
         filenames = this.checkedFiles;
       }
 
-      this.snackbar = true;
       const body = {
         task: "download",
         files: filenames,
@@ -116,13 +129,12 @@ export default {
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
+          this.snackbar = true;
           this.log = `File(s) downloaded successfully.`;
         });
       });
     },
-
     uploadFiles(files) {
-      this.snackbar = true;
       const body = {
         task: "upload",
         files: [],
@@ -152,7 +164,6 @@ export default {
             this.errorTitle = "File Read Error";
             this.errorMsg = `An error occurred while reading file ${file.name}: ${e.message}`;
             this.dialog = true;
-            this.loading = false;
             reject(e);
           };
 
@@ -163,6 +174,7 @@ export default {
       Promise.all(filesPromises).then(() => {
         this.fetchData(body, (data) => {
           this.fileList = data.files;
+          this.snackbar = true;
           this.log = `File(s) uploaded successfully.`;
         });
       });
@@ -188,20 +200,43 @@ export default {
   </v-row>
 
   <!-- File List Table -->
+  <div class="d-flex align-center ma-2">
+    <v-checkbox v-model="compact" label="Compact View" class="ma-2" hide-details density="compact"></v-checkbox>
+
+    <v-text-field
+      v-model="search"
+      label="Search"
+      density="compact"
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+      hide-details
+      class="ma-2"
+      max-width="50%"
+      single-line></v-text-field>
+  </div>
+
   <v-row v-if="fileList.length > 0" class="ma-2">
-    <v-card width="100%" title="Files on Cloud">
-      <template v-slot:text>
-        <v-text-field
-          v-model="search"
-          label="Search"
-          density="compact"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          single-line></v-text-field>
-      </template>
+    <v-card
+      v-if="compact"
+      v-for="file in filteredFiles"
+      :title="file.filename"
+      :subtitle="file.size + ' KB'"
+      :text="file.created"
+      :key="file.filename"
+      :prepend-icon="typeIcons[file.filetype]"
+      class="ma-2">
+      <v-card-actions>
+        <v-btn @click="downloadFiles($event, file.filename)" title="Download" icon class="mr-2">
+          <v-icon icon="mdi-download"></v-icon>
+        </v-btn>
+        <v-btn @click="deleteFile($event, file.filename)" title="Delete" icon>
+          <v-icon icon="mdi-delete"></v-icon>
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+    <v-card width="100%" v-else>
       <v-data-table
-        fixed-header="true"
+        :fixed-header="true"
         :headers="fileListHeaders"
         :items="fileList"
         :search="search"
@@ -253,6 +288,10 @@ export default {
 <style>
 .v-data-table__th {
   background-color: #311b92 !important;
+}
+
+.v-card-title {
+  color: #2196f3 !important;
 }
 
 .v-list-item {
