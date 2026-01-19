@@ -5,6 +5,7 @@ import os
 import sys
 import base64
 import datetime
+import mimetypes
 
 UPLOAD_DIR = ""
 MAX_FILE_SIZE = (0,)
@@ -33,7 +34,12 @@ def read_config(configfile):
             "image/jpg",
             "image/gif",
             "application/pdf",
+            "application/zip",
+            "application/json",
             "text/plain",
+            "text/csv",
+            "text/html",
+            "text/markdown",
         ],
     )
 
@@ -70,6 +76,7 @@ def list_directory(payload=None):
             "created": datetime.datetime.fromtimestamp(
                 os.path.getctime(os.path.join(UPLOAD_DIR, f))
             ).strftime("%Y-%m-%d %H:%M:%S"),
+            "filetype": mimetypes.guess_type(f)[0].split("/")[0] or "unknown",
         }
         for f in files
     ]

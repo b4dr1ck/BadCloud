@@ -6,6 +6,12 @@ export default {
   data() {
     return {
       checkedFiles: [],
+      typeIcons: {
+        image: "mdi-file-image",
+        text: "mdi-file-document",
+        application: "mdi-application-cog",
+        unknown: "mdi-file-question",
+      },
       dialog: false,
       log: "",
       errorTitle: "",
@@ -194,10 +200,17 @@ export default {
           hide-details
           single-line></v-text-field>
       </template>
-      <v-data-table :headers="fileListHeaders" :items="fileList" :search="search" items-per-page="25">
+      <v-data-table
+        fixed-header="true"
+        :headers="fileListHeaders"
+        :items="fileList"
+        :search="search"
+        items-per-page="25">
         <template v-slot:item="{ item }">
           <tr class="text-no-wrap">
-            <td class="text-blue font-weight-bold">{{ item.filename }}</td>
+            <td class="text-blue font-weight-bold">
+              <v-icon class="text-white" :icon="typeIcons[item.filetype]"></v-icon> {{ item.filename }}
+            </td>
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
             <td class="d-flex align-center">
