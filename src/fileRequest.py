@@ -70,15 +70,15 @@ def post_request():
 def list_directory(payload=None):
     files = os.listdir(UPLOAD_DIR)
     files_info = [
-        {
-            "filename": f,
-            "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)),
-            "created": datetime.datetime.fromtimestamp(
-                os.path.getctime(os.path.join(UPLOAD_DIR, f))
-            ).strftime("%Y-%m-%d %H:%M:%S"),
-            "filetype": mimetypes.guess_type(f)[0].split("/")[0] or "unknown",
-        }
-        for f in files
+      {
+        "filename": f,
+        "size": round(os.path.getsize(os.path.join(UPLOAD_DIR, f)) / 1000, 2),
+        "created": datetime.datetime.fromtimestamp(
+          os.path.getctime(os.path.join(UPLOAD_DIR, f))
+        ).strftime("%Y-%m-%d %H:%M:%S"),
+        "filetype": mimetypes.guess_type(f)[0].split("/")[0] or "unknown",
+      }
+      for f in files
     ]
     return files_info
 
