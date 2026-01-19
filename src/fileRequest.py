@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import base64
+import datetime
 
 UPLOAD_DIR = ""
 MAX_FILE_SIZE = (0,)
@@ -63,7 +64,13 @@ def post_request():
 def list_directory(payload=None):
     files = os.listdir(UPLOAD_DIR)
     files_info = [
-        {"filename": f, "size": os.path.getsize(os.path.join(UPLOAD_DIR, f))}
+        {
+            "filename": f,
+            "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)),
+            "created": datetime.datetime.fromtimestamp(
+                os.path.getctime(os.path.join(UPLOAD_DIR, f))
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+        }
         for f in files
     ]
     return files_info
@@ -118,10 +125,9 @@ def upload_files(payload):
                 "files": list_directory(),
             }
 
-
         filecontent = base64.b64decode(filecontent)
         file_path = os.path.join(UPLOAD_DIR, filename)
-        
+
         with open(file_path, "wb") as file:
             file.write(filecontent)
         file.close()

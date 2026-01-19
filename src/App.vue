@@ -5,9 +5,21 @@ export default {
   name: "App",
   data() {
     return {
+      log: "",
+      snackbar: false,
       loading: true,
       url: "http://127.0.0.1/fileRequest.py",
       fileList: [],
+      search: "",
+      fileListHeaders: [
+        {
+          key: "filename",
+          title: "Filename",
+        },
+        { key: "size", title: "Size (KB)" },
+        { key: "created", title: "Created" },
+        { key: "options", title: "Options" },
+      ],
     };
   },
 
@@ -29,6 +41,7 @@ export default {
 
   methods: {
     fetchData(body, callback) {
+      this.loading = true;
       fetch(this.url, {
         method: "POST",
         headers: {
@@ -42,7 +55,39 @@ export default {
           this.loading = false;
         });
     },
+    deleteFile(_event, filename) {
+      this.snackbar = true;
+      const body = {
+        task: "delete",
+        files: [filename],
+      };
+
+      this.fetchData(body, (data) => {
+        this.fileList = data.files;
+        this.log = `${filename} deleted successfully.`;
+      });
+    },
+    downloadFiles(_event, filenames) {
+      this.snackbar = true;
+      const body = {
+        task: "download",
+        files: [filenames],
+      };
+
+      this.fetchData(body, (data) => {
+        const link = document.createElement("a");
+        const files = data.files;
+        link.href = files[0].content;
+        link.download = files[0].filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        this.log = `${files[0]} downloaded successfully.`;
+      });
+    },
+
     uploadFiles(files) {
+      this.snackbar = true;
       const body = {
         task: "upload",
         files: [],
@@ -77,9 +122,9 @@ export default {
       });
 
       Promise.all(filesPromises).then(() => {
-        this.loading = true;
         this.fetchData(body, (data) => {
           this.fileList = data.files;
+          this.log = `Files uploaded successfully.`;
         });
       });
     },
@@ -90,7 +135,7 @@ export default {
 <template>
   <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
 
-  <v-row>
+  <v-row class="ma-2">
     <v-file-upload
       @update:modelValue="uploadFiles($event)"
       clearable
@@ -102,25 +147,49 @@ export default {
     </v-file-upload>
   </v-row>
 
-  <v-row>
-    <v-list width="100%" density="compact" v-if="fileList.length > 0">
-      <v-list-subheader>Files on my Cloud</v-list-subheader>
-      <v-list-item v-for="file in fileList" :key="file.filename" :value="file.filename" color="primary">
-        <template v-slot:prepend>
-          <v-icon icon="mdi-file-image"></v-icon>
+  <v-row v-if="fileList.length > 0" class="ma-2">
+    <v-card width="100%" title="Files on Cloud">
+      <template v-slot:text>
+        <v-text-field
+          v-model="search"
+          label="Search"
+          density="compact"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line></v-text-field>
+      </template>
+
+      <v-data-table :headers="fileListHeaders" :items="fileList" :search="search" items-per-page="25">
+        <template v-slot:item="{ item }">
+          <tr class="text-no-wrap">
+            <td class="text-blue">{{ item.filename }}</td>
+            <td>{{ item.size }}</td>
+            <td>{{ item.created }}</td>
+            <td>
+              <v-btn @click="downloadFiles($event, item.filename)" title="Download" icon class="mr-2">
+                <v-icon icon="mdi-download"></v-icon>
+              </v-btn>
+              <v-btn @click="deleteFile($event, item.filename)" title="Delete" icon>
+                <v-icon icon="mdi-delete"></v-icon>
+              </v-btn>
+            </td>
+          </tr>
         </template>
-        <v-list-item-title v-text="file.filename + ' (' + file.size / 1000 + ' KB)'"></v-list-item-title>
-        <template v-slot:append>
-          <v-btn icon class="mx-1">
-            <v-icon icon="mdi-download"></v-icon>
-          </v-btn>
-          <v-btn icon>
-            <v-icon icon="mdi-delete"></v-icon>
-          </v-btn>
-        </template>
-      </v-list-item>
-    </v-list>
+      </v-data-table>
+    </v-card>
   </v-row>
+
+  <v-snackbar width="100%" v-model="snackbar">
+    {{ log }}
+    <template v-slot:actions>
+      <v-btn variant="text" @click="snackbar = false"> Close </v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
-<style></style>
+<style>
+.v-data-table__th {
+  background-color: #311b92 !important;
+}
+</style>
