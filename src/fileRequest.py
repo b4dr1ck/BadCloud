@@ -180,7 +180,7 @@ def download_files(payload):
 
 
 if __name__ == "__main__":
-    configFile = "./.badCloud.json"
+    configFile = os.path.join(os.environ.get("HOME"), ".badCloud.json")
     read_config(configFile)
 
     payload = post_request()
