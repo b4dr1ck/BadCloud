@@ -57,6 +57,11 @@ export default {
         .then((data) => {
           callback(data);
           this.loading = false;
+          if (data.status === "error") {
+            this.errorTitle = "Error";
+            this.errorMsg = data.message;
+            this.dialog = true;
+          }
         })
         .catch((error) => {
           this.loading = false;
