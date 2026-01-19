@@ -1,11 +1,14 @@
 <script>
-import { VFileUpload } from "vuetify/labs/VFileUpload";
+import { VFileUpload, VFileUploadItem } from "vuetify/labs/VFileUpload";
 
 export default {
   name: "App",
   data() {
     return {
+      dialog: false,
       log: "",
+      errorTitle: "",
+      errorMsg: "",
       snackbar: false,
       loading: true,
       url: "http://127.0.0.1/fileRequest.py",
@@ -25,6 +28,7 @@ export default {
 
   components: {
     VFileUpload,
+    VFileUploadItem,
   },
 
   mounted() {
@@ -53,6 +57,12 @@ export default {
         .then((data) => {
           callback(data);
           this.loading = false;
+        })
+        .catch((error) => {
+          this.loading = false;
+          this.errorTitle = "Error";
+          this.errorMsg = `An error occurred: ${error.message}`;
+          this.dialog = true;
         });
     },
     deleteFile(_event, filename) {
@@ -114,6 +124,10 @@ export default {
 
           fr.onerror = (e) => {
             console.error(`Error reading file ${file.name}:`, e);
+            this.errorTitle = "File Read Error";
+            this.errorMsg = `An error occurred while reading file ${file.name}: ${e.message}`;
+            this.dialog = true;
+            this.loading = false;
             reject(e);
           };
 
@@ -135,6 +149,7 @@ export default {
 <template>
   <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
 
+  <!-- Upload Element-->
   <v-row class="ma-2">
     <v-file-upload
       @update:modelValue="uploadFiles($event)"
@@ -147,6 +162,7 @@ export default {
     </v-file-upload>
   </v-row>
 
+  <!-- File List Table -->
   <v-row v-if="fileList.length > 0" class="ma-2">
     <v-card width="100%" title="Files on Cloud">
       <template v-slot:text>
@@ -159,11 +175,10 @@ export default {
           hide-details
           single-line></v-text-field>
       </template>
-
       <v-data-table :headers="fileListHeaders" :items="fileList" :search="search" items-per-page="25">
         <template v-slot:item="{ item }">
           <tr class="text-no-wrap">
-            <td class="text-blue">{{ item.filename }}</td>
+            <td class="text-blue font-weight-bold">{{ item.filename }}</td>
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
             <td>
@@ -180,16 +195,34 @@ export default {
     </v-card>
   </v-row>
 
+  <!-- Snackbar for logs -->
   <v-snackbar width="100%" v-model="snackbar">
     {{ log }}
     <template v-slot:actions>
       <v-btn variant="text" @click="snackbar = false"> Close </v-btn>
     </template>
   </v-snackbar>
+
+  <!-- Error Dialog -->
+  <template>
+    <div class="text-center pa-4">
+      <v-dialog v-model="dialog" width="auto">
+        <v-card max-width="400" prepend-icon="mdi-alert" :text="errorMsg" :title="errorTitle">
+          <template v-slot:actions>
+            <v-btn class="ms-auto" text="Ok" @click="dialog = false"></v-btn>
+          </template>
+        </v-card>
+      </v-dialog>
+    </div>
+  </template>
 </template>
 
 <style>
 .v-data-table__th {
   background-color: #311b92 !important;
+}
+
+.v-list-item {
+  display: none !important; /* Hide the list items */
 }
 </style>
