@@ -6,7 +6,6 @@ export default {
   data() {
     return {
       currentDirectory: [],
-      compact: false,
       checkedFiles: [],
       typeIcons: {
         image: "mdi-file-image",
@@ -241,7 +240,6 @@ export default {
 
   <!-- Options-->
   <div class="d-flex align-center ma-2">
-    <v-checkbox v-model="compact" label="Compact View" class="ma-2" hide-details density="compact"></v-checkbox>
     <v-btn class="ma-1" @click="createFolder($event)" title="Create Folder"
       ><v-icon icon="mdi-folder-plus"></v-icon
     ></v-btn>
@@ -267,34 +265,9 @@ export default {
   </v-row>
   
   <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
-  
-  <!-- File List Data-Table / Cards (compact-view) -->
-  <v-row v-if="fileList.length > 0" class="ma-2">
-    <!--v-card
-      v-if="compact"
-      v-for="file in filteredFiles"
-      :title="file.filename"
-      :subtitle="file.size + ' KB'"
-      :text="file.created"
-      :key="file.filename"
-      :prepend-icon="file.isFolder ? 'mdi-folder' : typeIcons[file.filetype]"
-      class="ma-2">
-      <v-card-actions>
-        <v-btn @click="downloadFiles($event, file.filename)" title="Download" icon class="mr-2">
-          <v-icon icon="mdi-download"></v-icon>
-        </v-btn>
-        <v-btn @click="deleteFile($event, file.filename)" title="Delete" icon>
-          <v-icon icon="mdi-delete"></v-icon>
-        </v-btn>
-        <v-btn @click="" title="Copy" icon>
-          <v-icon icon="mdi-content-copy"></v-icon>
-        </v-btn>
-        <v-btn @click="" title="Move" icon>
-          <v-icon icon="mdi-file-move"></v-icon>
-        </v-btn>
-      </v-card-actions>
-    </v-card-->
 
+  <!-- File List Data-Table -->
+  <v-row v-if="fileList.length > 0" class="ma-2">
     <v-card height="100%" width="100%">
       <v-data-table-virtual
         v-model:sort-by="sortBy"
@@ -308,7 +281,7 @@ export default {
           <tr class="text-no-wrap">
             <td v-if="item.isFolder" class="text-blue font-weight-bold">
               <v-icon class="text-green" icon="mdi-folder"></v-icon
-              ><v-btn @click="changeDir($event, item.filename)">{{ item.filename }}</v-btn>
+              ><v-btn class="text-none" @click="changeDir($event, item.filename)">{{ item.filename }}</v-btn>
             </td>
             <td v-else class="text-blue font-weight-bold">
               <v-icon class="text-white" :icon="typeIcons[item.filetype]"></v-icon> {{ item.filename }}
