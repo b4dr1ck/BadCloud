@@ -6,6 +6,7 @@ import sys
 import base64
 import datetime
 import mimetypes
+import shutil
 
 UPLOAD_DIR = ""
 MAX_FILE_SIZE = (0,)
@@ -67,19 +68,44 @@ def post_request():
     return payload
 
 
-def list_directory(payload=None):
-    files = os.listdir(UPLOAD_DIR)
+def list_directory(payload):
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+    
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
+
+    files = os.listdir(absolute_path)
     files_info = [
-      {
-        "filename": f,
-        "size": round(os.path.getsize(os.path.join(UPLOAD_DIR, f)) / 1000, 2),
-        "created": datetime.datetime.fromtimestamp(
-          os.path.getctime(os.path.join(UPLOAD_DIR, f))
-        ).strftime("%Y-%m-%d %H:%M:%S"),
-        "filetype": mimetypes.guess_type(f)[0].split("/")[0] or "unknown",
-      }
-      for f in files
+        {
+            "filename": f,
+            "size": round(os.path.getsize(os.path.join(absolute_path, f)) / 1000, 2),
+            "created": datetime.datetime.fromtimestamp(
+                os.path.getctime(os.path.join(absolute_path, f))
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+            "filetype": (
+                mimetypes.guess_type(f)[0].split("/")[0]
+                if mimetypes.guess_type(f)[0]
+                else "unknown"
+            ),
+            "isFolder": (
+                True if os.path.isdir(os.path.join(absolute_path, f)) else False
+            ),
+        }
+        for f in files
     ]
+    
+    if dir:
+      files_info.append(
+          {
+              "filename": "..",
+              "size": 0,
+              "created": "",
+              "filetype": "folder",
+              "isFolder": True,
+          }
+      )
+    
     return files_info
 
 
@@ -95,16 +121,20 @@ def check_filetype(filetype):
     return True
 
 
-def check_total_size():
-    total_size = sum(
-        os.path.getsize(os.path.join(UPLOAD_DIR, f)) for f in os.listdir(UPLOAD_DIR)
-    )
+def check_total_size(path):
+    total_size = sum(os.path.getsize(os.path.join(path, f)) for f in os.listdir(path))
     if total_size > MAX_TOTAL_SIZE:
         return False
     return True
 
 
 def upload_files(payload):
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+    
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
+
     for file in payload.get("files", []):
         filename = file.get("filename", "")
         filecontent = file.get("content", "")
@@ -115,31 +145,31 @@ def upload_files(payload):
             return {
                 "status": "error",
                 "message": f"File {filename} exceeds maximum allowed size of {MAX_FILE_SIZE} bytes.",
-                "files": list_directory(),
+                "files": list_directory(payload),
             }
 
         if not check_filetype(filetype):
             return {
                 "status": "error",
                 "message": f"File type {filetype} is not allowed. Allowed types: {ALLOWED_FILETYPE}.",
-                "files": list_directory(),
+                "files": list_directory(payload),
             }
 
-        if not check_total_size():
+        if not check_total_size(absolute_path):
             return {
                 "status": "error",
                 "message": f"Total upload size exceeds maximum allowed size of {MAX_TOTAL_SIZE} bytes.",
-                "files": list_directory(),
+                "files": list_directory(payload),
             }
 
         filecontent = base64.b64decode(filecontent)
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        file_path = os.path.join(absolute_path, filename)
 
         with open(file_path, "wb") as file:
             file.write(filecontent)
         file.close()
 
-    files = list_directory()
+    files = list_directory(payload)
 
     return {
         "status": "success",
@@ -149,12 +179,21 @@ def upload_files(payload):
 
 
 def delete_files(payload):
-    for filename in payload.get("files", []):
-        file_path = os.path.join(UPLOAD_DIR, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+    
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
 
-    files = list_directory()
+    for filename in payload.get("files", []):
+        file_path = os.path.join(absolute_path, filename)
+        if os.path.exists(file_path):
+            if os.path.isdir(file_path):
+                os.rmdir(file_path)
+            else:
+                os.remove(file_path)
+
+    files = list_directory(payload)
 
     return {
         "status": "success",
@@ -164,9 +203,15 @@ def delete_files(payload):
 
 
 def download_files(payload):
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+    
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
+
     downloaded_files = []
     for filename in payload.get("files", []):
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        file_path = os.path.join(absolute_path, filename)
         if os.path.exists(file_path):
             with open(file_path, "rb") as file:
                 file_data = file.read()
