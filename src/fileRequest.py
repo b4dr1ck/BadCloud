@@ -230,6 +230,29 @@ def download_files(payload):
         "files": downloaded_files,
     }
 
+def createFolder(payload):
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+    
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
+
+    folder_name = payload.get("foldername", "")
+    folder_path = os.path.join(absolute_path, folder_name)
+
+    try:
+        os.makedirs(folder_path, exist_ok=True)
+        return {
+            "status": "success",
+            "message": f"Folder '{folder_name}' created successfully.",
+            "files": list_directory(payload),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+        }
+
 
 if __name__ == "__main__":
     configFile = os.path.join(os.environ.get("HOME"), ".badCloud.json")
@@ -242,6 +265,7 @@ if __name__ == "__main__":
         "upload": upload_files,
         "download": download_files,
         "delete": delete_files,
+        "create_folder": createFolder,
     }
 
     print_headers()

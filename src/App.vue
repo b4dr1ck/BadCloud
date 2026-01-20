@@ -77,14 +77,15 @@ export default {
       })
         .then((response) => response.json())
         .then((data) => {
-          callback(data);
           this.loading = false;
           if (data.status === "error") {
             this.errorTitle = "Error";
             this.errorMsg = data.message;
             this.dialog = true;
             this.snackbar = false;
+            return;
           }
+          callback(data);
         })
         .catch((error) => {
           this.loading = false;
@@ -92,6 +93,24 @@ export default {
           this.errorMsg = `An error occurred: ${error.message}`;
           this.dialog = true;
         });
+    },
+    createFolder(_event) {
+      const folderName = prompt("Enter folder name:");
+      if (!folderName) {
+        return;
+      }
+
+      const body = {
+        task: "create_folder",
+        foldername: folderName,
+        dir: this.currentDirectory.join("/"),
+      };
+
+      this.fetchData(body, (data) => {
+        this.fileList = data.files;
+        this.snackbar = true;
+        this.log = `Folder "${folderName}" created successfully.`;
+      });
     },
     changeDir(_event, dir) {
       if (dir === "..") {
@@ -121,13 +140,6 @@ export default {
       };
 
       this.fetchData(body, (data) => {
-        if (data.status === "error") {
-          this.errorTitle = "Error";
-          this.errorMsg = data.message;
-          this.dialog = true;
-          this.snackbar = false;
-          return;
-        }
         this.fileList = data.files;
         this.snackbar = true;
         if (isFolder) {
@@ -214,8 +226,6 @@ export default {
 </script>
 
 <template>
-  <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
-
   <!-- Upload Element-->
   <v-row class="ma-2">
     <v-file-upload
@@ -232,8 +242,10 @@ export default {
   <!-- Options-->
   <div class="d-flex align-center ma-2">
     <v-checkbox v-model="compact" label="Compact View" class="ma-2" hide-details density="compact"></v-checkbox>
-    <v-btn class="ma-1" title="Create Folder"><v-icon icon="mdi-folder-plus"></v-icon></v-btn>
-    <v-btn class="ma-1" title="Paste"><v-icon icon="mdi-content-paste"></v-icon></v-btn>
+    <v-btn class="ma-1" @click="createFolder($event)" title="Create Folder"
+      ><v-icon icon="mdi-folder-plus"></v-icon
+    ></v-btn>
+    <v-btn disabled class="ma-1" title="Paste"><v-icon icon="mdi-content-paste"></v-icon></v-btn>
     <v-text-field
       v-model="search"
       label="Search"
@@ -247,13 +259,15 @@ export default {
   </div>
 
   <!--Path-->
-  <v-row class="ma-2">
-    <div><v-btn>/</v-btn></div>
+  <v-row class="ma-2 path">
+    <div>/</div>
     <div v-if="currentDirectory.length > 0" v-for="dir in currentDirectory">
-      <v-btn>{{ dir }}/</v-btn>
+      {{ dir }}/
     </div>
   </v-row>
-
+  
+  <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
+  
   <!-- File List Data-Table / Cards (compact-view) -->
   <v-row v-if="fileList.length > 0" class="ma-2">
     <!--v-card
@@ -282,7 +296,7 @@ export default {
     </v-card-->
 
     <v-card height="100%" width="100%">
-      <v-data-table
+      <v-data-table-virtual
         v-model:sort-by="sortBy"
         :headers="fileListHeaders"
         :items="fileList"
@@ -323,7 +337,7 @@ export default {
             </td>
           </tr>
         </template>
-      </v-data-table>
+      </v-data-table-virtual>
     </v-card>
   </v-row>
 
@@ -365,5 +379,12 @@ export default {
 
 .v-table__wrapper {
   overflow: hidden !important; /* Disable table scrolling */
+}
+
+.path {
+  font-family: monospace;
+  font-size: 1em;
+  background-color: black;
+  color:greenyellow;
 }
 </style>
