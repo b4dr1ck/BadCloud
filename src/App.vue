@@ -31,7 +31,7 @@ export default {
         },
         { key: "size", title: "Size (KB)" },
         { key: "created", title: "Created" },
-        { key: "options", title: "Options" },
+        { key: "options", title: "" },
       ],
     };
   },
@@ -301,7 +301,7 @@ export default {
             </td>
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
-            <td class="d-flex align-center">
+            <td class="d-flex align-center justify-end">
               <v-btn
                 v-if="!item.isFolder"
                 @click="downloadFiles($event, item.filename)"
