@@ -71,41 +71,50 @@ def post_request():
 def list_directory(payload):
     dir = payload.get("dir")
     absolute_path = UPLOAD_DIR
-    
+    files_info = []
+
     if dir:
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 
     files = os.listdir(absolute_path)
-    files_info = [
-        {
-            "filename": f,
-            "size": round(os.path.getsize(os.path.join(absolute_path, f)) / 1000, 2),
-            "created": datetime.datetime.fromtimestamp(
-                os.path.getctime(os.path.join(absolute_path, f))
-            ).strftime("%Y-%m-%d %H:%M:%S"),
-            "filetype": (
+
+    for f in files:
+        size = round(os.path.getsize(os.path.join(absolute_path, f)) / 1000, 2)
+        created = datetime.datetime.fromtimestamp(
+            os.path.getctime(os.path.join(absolute_path, f))
+        ).strftime("%Y-%m-%d %H:%M:%S")
+        ifFolder = True if os.path.isdir(os.path.join(absolute_path, f)) else False
+        filetype = (
+            "folder"
+            if ifFolder
+            else (
                 mimetypes.guess_type(f)[0].split("/")[0]
                 if mimetypes.guess_type(f)[0]
                 else "unknown"
-            ),
-            "isFolder": (
-                True if os.path.isdir(os.path.join(absolute_path, f)) else False
-            ),
-        }
-        for f in files
-    ]
-    
+            )
+        )
+
+        files_info.append(
+            {
+                "filename": f,
+                "size": size,
+                "created": created,
+                "filetype": filetype,
+                "isFolder": ifFolder,
+            }
+        )
+
     if dir:
-      files_info.append(
-          {
-              "filename": "..",
-              "size": 0,
-              "created": "",
-              "filetype": "folder",
-              "isFolder": True,
-          }
-      )
-    
+        files_info.append(
+            {
+                "filename": "..",
+                "size": 0,
+                "created": "",
+                "filetype": "folder",
+                "isFolder": True,
+            }
+        )
+
     return files_info
 
 
@@ -131,7 +140,7 @@ def check_total_size(path):
 def upload_files(payload):
     dir = payload.get("dir")
     absolute_path = UPLOAD_DIR
-    
+
     if dir:
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 
@@ -181,7 +190,7 @@ def upload_files(payload):
 def delete_files(payload):
     dir = payload.get("dir")
     absolute_path = UPLOAD_DIR
-    
+
     if dir:
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 
@@ -205,7 +214,7 @@ def delete_files(payload):
 def download_files(payload):
     dir = payload.get("dir")
     absolute_path = UPLOAD_DIR
-    
+
     if dir:
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 
@@ -230,10 +239,11 @@ def download_files(payload):
         "files": downloaded_files,
     }
 
+
 def createFolder(payload):
     dir = payload.get("dir")
     absolute_path = UPLOAD_DIR
-    
+
     if dir:
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 

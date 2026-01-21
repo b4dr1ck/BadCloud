@@ -28,6 +28,7 @@ export default {
           key: "filename",
           title: "Filename",
         },
+        { key: "filetype", title: "Type" },
         { key: "size", title: "Size (KB)" },
         { key: "created", title: "Created" },
         { key: "options", title: "" },
@@ -111,11 +112,18 @@ export default {
         this.log = `Folder "${folderName}" created successfully.`;
       });
     },
-    changeDir(_event, dir) {
+    changeDir(_event, dir, absoulte = false) {
       if (dir === "..") {
         this.currentDirectory.pop();
       } else {
-        this.currentDirectory.push(dir);
+        if (absoulte) {
+          this.currentDirectory = this.currentDirectory
+            .join("/")
+            .split("/")
+            .slice(0, this.currentDirectory.indexOf(dir) + 1);
+        } else {
+          this.currentDirectory.push(dir);
+        }
       }
 
       const body = {
@@ -243,7 +251,6 @@ export default {
     <v-btn class="ma-1" @click="createFolder($event)" title="Create Folder"
       ><v-icon icon="mdi-folder-plus"></v-icon
     ></v-btn>
-    <v-btn disabled class="ma-1" title="Paste"><v-icon icon="mdi-content-paste"></v-icon></v-btn>
     <v-text-field
       v-model="search"
       label="Search"
@@ -258,12 +265,12 @@ export default {
 
   <!--Path-->
   <v-row class="ma-2 path">
-    <div>/</div>
-    <div v-if="currentDirectory.length > 0" v-for="dir in currentDirectory">
+    <div @click="changeDir($event, dir, true)">/</div>
+    <div @click="changeDir($event, dir, true)" v-if="currentDirectory.length > 0" v-for="dir in currentDirectory">
       {{ dir }}/
     </div>
   </v-row>
-  
+
   <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
 
   <!-- File List Data-Table -->
@@ -281,11 +288,12 @@ export default {
           <tr class="text-no-wrap">
             <td v-if="item.isFolder" class="text-blue font-weight-bold">
               <v-icon class="text-green" icon="mdi-folder"></v-icon
-              ><v-btn class="text-none" @click="changeDir($event, item.filename)">{{ item.filename }}</v-btn>
+              ><v-btn class="text-none text-green" @click="changeDir($event, item.filename)">{{ item.filename }}</v-btn>
             </td>
             <td v-else class="text-blue font-weight-bold">
               <v-icon class="text-white" :icon="typeIcons[item.filetype]"></v-icon> {{ item.filename }}
             </td>
+            <td>{{ item.filetype }}</td>
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
             <td class="d-flex align-center justify-end">
@@ -300,17 +308,16 @@ export default {
               <v-btn @click="deleteFile($event, item.filename, item.isFolder)" title="Delete" icon>
                 <v-icon icon="mdi-delete"></v-icon>
               </v-btn>
-              <v-btn @click="" title="Copy" icon>
-                <v-icon icon="mdi-content-copy"></v-icon>
-              </v-btn>
-              <v-btn @click="" title="Move" icon>
-                <v-icon icon="mdi-file-move"></v-icon>
-              </v-btn>
               <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
             </td>
           </tr>
         </template>
       </v-data-table-virtual>
+    </v-card>
+  </v-row>
+  <v-row v-else>
+    <v-card class="ma-2 pa-4" width="100%">
+      <div class="text-center text-h6">No files found.</div>
     </v-card>
   </v-row>
 
@@ -358,6 +365,11 @@ export default {
   font-family: monospace;
   font-size: 1em;
   background-color: black;
-  color:greenyellow;
+  color: greenyellow;
+}
+
+.path div:hover {
+  cursor: pointer;
+  text-decoration: underline;
 }
 </style>
