@@ -1,38 +1,81 @@
-# badCloud
+# Bad Cloud
 
-This template should help get you started developing with Vue 3 in Vite.
+# Requirements
 
-## Recommended IDE Setup
+- python3 (/usr/bin/python3)
+- webserver
+- node / npm
+- git
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+# Installation
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
+```bash
+# clone the repo
+git clone git@github.com:b4dr1ck/BadCloud.git
+# cd to the project folder
+cd BadCloud
+# install node modules
+npm i
+# build the project
 npm run build
+# cd to the dist/ folder (the builded project)
+cd dist/
+# deploy to your webserver
+cp -r * /var/www/html # path to you webserver DOCROOT
+cp src/fileRequest.py /var/www/html # path to you webserver DOCROOT
+```
+
+# Config File
+
+create a config file in your **$HOME** named **.badCloud.json**
+If you want to change the path or filename of the config-file you have to do it in the backend sript **src/fileRequest.py**
+
+```python
+configFile = os.path.join(os.environ.get("HOME"), ".badCloud.json")
+```
+
+```json
+{
+  "UPLOAD_DIR": "/home/itsv.org.sv-services.at/patrick.reiter@itsv.at/uploads",
+  "MAX_FILE_SIZE": 10485760,
+  "MAX_TOTAL_SIZE": 104857600,
+  "ALLOWED_FILETYPE": [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/gif",
+    "application/pdf",
+    "application/zip",
+    "application/json",
+    "text/plain",
+    "text/csv",
+    "text/html",
+    "text/markdown"
+  ]
+}
+```
+
+- UPLOAD_DIR
+  - Target for Files to Upload
+- MAX_FILE_SIZE
+  - maximal file size for files to upload in bytes
+- MAX_TOTAL_SIZE
+  - maximal available space in your UPLOAD_DIR
+- ALLOWED_FILETYPE
+  - allowed mime-types for to upload
+
+# Base Url
+
+to change the base directory of the project on your webserver (default is /), you have to change the vite.config.js
+
+```js
+export default defineConfig({
+  base: "/", // change this value
+  plugins: [vue(), vueDevTools()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+});
 ```
