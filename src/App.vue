@@ -53,15 +53,7 @@ export default {
     });
   },
 
-  computed: {
-    filteredFiles() {
-      if (!this.search) {
-        return this.fileList;
-      }
-      const searchTerm = this.search.toLowerCase();
-      return this.fileList.filter((file) => file.filename.toLowerCase().includes(searchTerm));
-    },
-  },
+  computed: {},
 
   methods: {
     fetchData(body, callback) {
@@ -228,6 +220,13 @@ export default {
         });
       });
     },
+    selectAllFiles(event) {
+      if (event === false) {
+        this.checkedFiles = [];
+        return;
+      }
+      this.checkedFiles = this.fileList.map((file) => file.filename);
+    },
   },
 };
 </script>
@@ -253,7 +252,7 @@ export default {
     ></v-btn>
     <v-text-field
       v-model="search"
-      label="Search"
+      label="Search in current directory"
       density="compact"
       prepend-inner-icon="mdi-magnify"
       variant="outlined"
@@ -284,6 +283,28 @@ export default {
         :search="search"
         hide-default-footer
         :items-per-page="-1">
+        <template v-slot:headers="{ columns, isSorted, getSortIcon, toggleSort }">
+          <tr>
+            <template v-for="column in columns" :key="column.key">
+              <th
+                v-if="column.key === 'options'"
+                class="d-flex align-center justify-end">
+                <v-checkbox
+                  @update:model-value="selectAllFiles($event)"
+                  title="Select"
+                  value="all"
+                  class="mt-5"></v-checkbox>
+              </th>
+
+              <th v-else class="text-purple-lighten-2 cursor-pointer" @click="toggleSort(column)">
+                <div class="d-flex align-center">
+                  <span class="me-2" v-text="column.title.toUpperCase()"></span>
+                  <v-icon v-if="isSorted(column)" :icon="getSortIcon(column)" color="text-purple-lighten-2"></v-icon>
+                </div>
+              </th>
+            </template>
+          </tr>
+        </template>
         <template v-slot:item="{ item }">
           <tr class="text-no-wrap">
             <td v-if="item.isFolder" class="text-blue font-weight-bold">
@@ -344,11 +365,6 @@ export default {
 </template>
 
 <style>
-.v-data-table__th {
-  background-color: #311b92 !important;
-  font-size: larger !important;
-}
-
 .v-card-title {
   color: #2196f3 !important;
 }
@@ -359,6 +375,10 @@ export default {
 
 .v-table__wrapper {
   overflow: hidden !important; /* Disable table scrolling */
+}
+
+.v-table__wrapper tr:nth-of-type(odd) {
+  background-color: #1e1e1e !important;
 }
 
 .path {
