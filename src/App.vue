@@ -262,7 +262,7 @@ export default {
         this.fetchData(body, (data) => {
           this.fileList = data.files;
           this.snackbar = true;
-          
+
           if (files.length > 1) {
             this.log = `Files uploaded successfully.`;
             return;
@@ -374,18 +374,38 @@ export default {
             <td>{{ item.created }}</td>
             <!--Options-->
             <td class="d-flex align-center justify-end">
-              <v-btn
-                v-if="!item.isFolder"
-                @click="downloadFiles($event, item.filename)"
-                title="Download"
-                icon
-                class="mr-2">
-                <v-icon icon="mdi-download"></v-icon>
-              </v-btn>
-              <v-btn @click="deleteFile($event, item.filename, item.isFolder)" title="Delete" icon>
-                <v-icon icon="mdi-delete"></v-icon>
-              </v-btn>
-              <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
+              <template v-if="item.isFolder">
+                <v-btn @click="changeDir($event, item.filename)" title="Enter" icon class="mr-2"
+                  ><v-icon icon="mdi-location-enter"></v-icon
+                ></v-btn>
+                <v-btn
+                  v-if="item.filename !== '..'"
+                  @click="deleteFile($event, item.filename, item.isFolder)"
+                  title="Delete"
+                  icon>
+                  <v-icon icon="mdi-delete"></v-icon>
+                </v-btn>
+                <v-btn
+                  v-if="item.filename !== '..'"
+                  @click="openPrompt($event, 'rename_file', item.filename)"
+                  title="Rename"
+                  icon>
+                  <v-icon icon="mdi-rename"></v-icon>
+                </v-btn>
+                <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
+              </template>
+              <template v-else>
+                <v-btn @click="downloadFiles($event, item.filename)" title="Download" icon class="mr-2">
+                  <v-icon icon="mdi-download"></v-icon>
+                </v-btn>
+                <v-btn @click="deleteFile($event, item.filename, item.isFolder)" title="Delete" icon>
+                  <v-icon icon="mdi-delete"></v-icon>
+                </v-btn>
+                <v-btn @click="openPrompt($event, 'rename_file', item.filename)" title="Rename" icon>
+                  <v-icon icon="mdi-rename"></v-icon>
+                </v-btn>
+                <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
+              </template>
             </td>
           </tr>
         </template>
@@ -399,8 +419,7 @@ export default {
   </v-row>
 
   <!-- Snackbar for logs -->
-  <v-snackbar width="100%" v-model="snackbar">
-    {{ log }}
+  <v-snackbar width="100%" v-model="snackbar" :text="log" timer>
     <template v-slot:actions>
       <v-btn variant="text" @click="snackbar = false"> Close </v-btn>
     </template>
