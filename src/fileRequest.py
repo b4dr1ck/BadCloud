@@ -263,6 +263,32 @@ def createFolder(payload):
             "message": str(e),
         }
 
+def renameFile(payload):
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
+
+    old_filename = payload.get("old_filename", "")
+    new_filename = payload.get("new_filename", "")
+
+    old_file_path = os.path.join(absolute_path, old_filename)
+    new_file_path = os.path.join(absolute_path, new_filename)
+
+    try:
+        os.rename(old_file_path, new_file_path)
+        return {
+            "status": "success",
+            "message": f"File '{old_filename}' renamed to '{new_filename}' successfully.",
+            "files": list_directory(payload),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+        }
+
 
 if __name__ == "__main__":
     configFile = os.path.join(os.environ.get("HOME"), ".badCloud.json")
@@ -276,6 +302,7 @@ if __name__ == "__main__":
         "download": download_files,
         "delete": delete_files,
         "create_folder": createFolder,
+        "rename_file": renameFile,
     }
 
     print_headers()

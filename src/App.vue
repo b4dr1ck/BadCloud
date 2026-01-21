@@ -14,9 +14,15 @@ export default {
         unknown: "mdi-file-question",
       },
       dialog: false,
+      prompt: false,
       log: "",
       errorTitle: "",
       errorMsg: "",
+      promptTitle: "",
+      promptMsg: "",
+      newPromptValue: "",
+      promptCallback: null,
+      promptCallbackParam: null,
       snackbar: false,
       loading: true,
       url: "http://127.0.0.1/fileRequest.py",
@@ -86,22 +92,50 @@ export default {
           this.dialog = true;
         });
     },
-    createFolder(_event) {
-      const folderName = prompt("Enter folder name:");
-      if (!folderName) {
-        return;
+    openPrompt(_event, type, param) {
+      this.prompt = true;
+      this.newPromptValue = "";
+      switch (type) {
+        case "rename_file":
+          this.newPromptValue = param;
+          this.promptTitle = "Rename File";
+          this.promptMsg = "Enter the new filename:";
+          this.promptCallback = this.renameFile;
+          this.promptCallbackParam = param;
+          break;
+        case "create_folder":
+          this.promptTitle = "Create Folder";
+          this.promptMsg = "Enter the folder name:";
+          this.promptCallback = this.createFolder;
+          this.promptCallbackParam = null;
+          break;
       }
-
+    },
+    renameFile(_event) {
       const body = {
-        task: "create_folder",
-        foldername: folderName,
+        task: "rename_file",
+        old_filename: this.promptCallbackParam,
+        new_filename: this.newPromptValue,
         dir: this.currentDirectory.join("/"),
       };
 
       this.fetchData(body, (data) => {
         this.fileList = data.files;
         this.snackbar = true;
-        this.log = `Folder "${folderName}" created successfully.`;
+        this.log = `File "${this.promptCallbackParam}" renamed to "${this.newPromptValue}" successfully.`;
+      });
+    },
+    createFolder(_event) {
+      const body = {
+        task: "create_folder",
+        foldername: this.newPromptValue,
+        dir: this.currentDirectory.join("/"),
+      };
+
+      this.fetchData(body, (data) => {
+        this.fileList = data.files;
+        this.snackbar = true;
+        this.log = `Folder "${this.newPromptValue}" created successfully.`;
       });
     },
     changeDir(_event, dir, absoulte = false) {
@@ -247,7 +281,7 @@ export default {
 
   <!-- Options-->
   <div class="d-flex align-center ma-2">
-    <v-btn class="ma-1" @click="createFolder($event)" title="Create Folder"
+    <v-btn @click="openPrompt($event, 'create_folder')" class="ma-1" title="Create Folder"
       ><v-icon icon="mdi-folder-plus"></v-icon
     ></v-btn>
     <v-text-field
@@ -283,19 +317,19 @@ export default {
         :search="search"
         hide-default-footer
         :items-per-page="-1">
+        <!-- Table Header-->
         <template v-slot:headers="{ columns, isSorted, getSortIcon, toggleSort }">
           <tr>
+            <!-- Last Column "Select All Checkbox"-->
             <template v-for="column in columns" :key="column.key">
-              <th
-                v-if="column.key === 'options'"
-                class="d-flex align-center justify-end">
+              <th v-if="column.key === 'options'" class="d-flex align-center justify-end">
                 <v-checkbox
                   @update:model-value="selectAllFiles($event)"
                   title="Select"
                   value="all"
                   class="mt-5"></v-checkbox>
               </th>
-
+              <!-- Columns-->
               <th v-else class="text-purple-lighten-2 cursor-pointer" @click="toggleSort(column)">
                 <div class="d-flex align-center">
                   <span class="me-2" v-text="column.title.toUpperCase()"></span>
@@ -305,18 +339,22 @@ export default {
             </template>
           </tr>
         </template>
+        <!-- Table Body-->
         <template v-slot:item="{ item }">
           <tr class="text-no-wrap">
+            <!-- Filenames with Icon (Exception for Folder Object)-->
             <td v-if="item.isFolder" class="text-blue font-weight-bold">
               <v-icon class="text-green" icon="mdi-folder"></v-icon
               ><v-btn class="text-none text-green" @click="changeDir($event, item.filename)">{{ item.filename }}</v-btn>
             </td>
-            <td v-else class="text-blue font-weight-bold">
-              <v-icon class="text-white" :icon="typeIcons[item.filetype]"></v-icon> {{ item.filename }}
+            <td @click="openPrompt($event, 'rename_file', item.filename)" v-else class="text-blue font-weight-bold">
+              <v-icon class="text-white" :icon="typeIcons[item.filetype]"></v-icon>
+              {{ item.filename }}
             </td>
             <td>{{ item.filetype }}</td>
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
+            <!--Options-->
             <td class="d-flex align-center justify-end">
               <v-btn
                 v-if="!item.isFolder"
@@ -362,6 +400,30 @@ export default {
       </v-dialog>
     </div>
   </template>
+
+  <!-- Prompt-->
+  <template>
+    <div class="text-center pa-4">
+      <v-dialog v-model="prompt" width="auto">
+        <v-card width="400" prepend-icon="mdi-information" :text="promptMsg" :title="promptTitle">
+          <v-card-text class="py-0 ma-0">
+            <v-text-field
+              v-model="newPromptValue"
+              label="Folder Name"
+              variant="outlined"
+              density="compact"
+              hide-details></v-text-field>
+          </v-card-text>
+          <template v-slot:actions>
+            <div>
+              <v-btn class="ms-auto" text="Ok" @click="promptCallback(), (prompt = false)"></v-btn>
+              <v-btn class="ms-auto" text="Cancel" @click="prompt = false"></v-btn>
+            </div>
+          </template>
+        </v-card>
+      </v-dialog>
+    </div>
+  </template>
 </template>
 
 <style>
@@ -379,6 +441,11 @@ export default {
 
 .v-table__wrapper tr:nth-of-type(odd) {
   background-color: #1e1e1e !important;
+}
+
+.v-table__wrapper td:nth-of-type(1):hover {
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .path {
