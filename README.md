@@ -36,7 +36,7 @@ configFile = os.path.join(os.environ.get("HOME"), ".badCloud.json")
 
 ```json
 {
-  "UPLOAD_DIR": "/home/itsv.org.sv-services.at/patrick.reiter@itsv.at/uploads",
+  "UPLOAD_DIR": "/home/foobar",
   "MAX_FILE_SIZE": 10485760,
   "MAX_TOTAL_SIZE": 104857600,
   "ALLOWED_FILETYPE": [
