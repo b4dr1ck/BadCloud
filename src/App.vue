@@ -176,9 +176,17 @@ export default {
         this.fileList = data.files;
         this.snackbar = true;
         if (isFolder) {
-          this.log = `Folder(s) deleted successfully.`;
+          if (filename.length > 1) {
+            this.log = `Folders deleted successfully.`;
+            return;
+          }
+          this.log = `Folder ${filename} deleted successfully.`;
         } else {
-          this.log = `File(s) deleted successfully.`;
+          if (filename.length > 1) {
+            this.log = `Files deleted successfully.`;
+            return;
+          }
+          this.log = `File ${filename} deleted successfully.`;
         }
       });
     },
@@ -204,8 +212,12 @@ export default {
           link.click();
           document.body.removeChild(link);
           this.snackbar = true;
-          this.log = `File(s) downloaded successfully.`;
         });
+        if (filenames.length > 1) {
+          this.log = `Files downloaded successfully.`;
+          return;
+        }
+        this.log = `File ${filenames[0]} downloaded successfully.`;
       });
     },
     uploadFiles(files) {
@@ -250,7 +262,13 @@ export default {
         this.fetchData(body, (data) => {
           this.fileList = data.files;
           this.snackbar = true;
-          this.log = `File(s) uploaded successfully.`;
+          
+          if (files.length > 1) {
+            this.log = `Files uploaded successfully.`;
+            return;
+          }
+
+          this.log = `File ${files[0].name} uploaded successfully.`;
         });
       });
     },
