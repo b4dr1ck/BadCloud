@@ -115,7 +115,7 @@ def list_directory(payload):
             }
         )
 
-    return files_info
+    return {"files": files_info, "totalSize": [total_size(UPLOAD_DIR), MAX_TOTAL_SIZE]}
 
 
 def check_file_size(filesize):
@@ -130,9 +130,16 @@ def check_filetype(filetype):
     return True
 
 
+def total_size(path):
+    total = 0
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            total += os.path.getsize(os.path.join(root, file))
+    return total
+  
+
 def check_total_size(path):
-    total_size = sum(os.path.getsize(os.path.join(path, f)) for f in os.listdir(path))
-    if total_size > MAX_TOTAL_SIZE:
+    if total_size(path) > MAX_TOTAL_SIZE:
         return False
     return True
 
@@ -154,21 +161,21 @@ def upload_files(payload):
             return {
                 "status": "error",
                 "message": f"File {filename} exceeds maximum allowed size of {MAX_FILE_SIZE} bytes.",
-                "files": list_directory(payload),
+                "files": list_directory(payload)["files"],
             }
 
         if not check_filetype(filetype):
             return {
                 "status": "error",
                 "message": f"File type {filetype} is not allowed. Allowed types: {ALLOWED_FILETYPE}.",
-                "files": list_directory(payload),
+                "files": list_directory(payload)["files"],
             }
 
         if not check_total_size(absolute_path):
             return {
                 "status": "error",
                 "message": f"Total upload size exceeds maximum allowed size of {MAX_TOTAL_SIZE} bytes.",
-                "files": list_directory(payload),
+                "files": list_directory(payload)["files"],
             }
 
         filecontent = base64.b64decode(filecontent)
@@ -178,12 +185,13 @@ def upload_files(payload):
             file.write(filecontent)
         file.close()
 
-    files = list_directory(payload)
+    files = list_directory(payload)["files"]
 
     return {
         "status": "success",
         "message": f"File(s) uploaded successfully.",
         "files": files,
+        "totalSize": [total_size(UPLOAD_DIR), MAX_TOTAL_SIZE],
     }
 
 
@@ -202,12 +210,13 @@ def delete_files(payload):
             else:
                 os.remove(file_path)
 
-    files = list_directory(payload)
+    files = list_directory(payload)["files"]
 
     return {
         "status": "success",
         "message": f"File(s) deleted successfully.",
         "files": files,
+        "totalSize": [total_size(UPLOAD_DIR), MAX_TOTAL_SIZE],
     }
 
 
@@ -255,13 +264,15 @@ def createFolder(payload):
         return {
             "status": "success",
             "message": f"Folder '{folder_name}' created successfully.",
-            "files": list_directory(payload),
+            "files": list_directory(payload)["files"],
+            "totalSize": [total_size(UPLOAD_DIR), MAX_TOTAL_SIZE],
         }
     except Exception as e:
         return {
             "status": "error",
             "message": str(e),
         }
+
 
 def renameFile(payload):
     dir = payload.get("dir")
@@ -281,7 +292,7 @@ def renameFile(payload):
         return {
             "status": "success",
             "message": f"File '{old_filename}' renamed to '{new_filename}' successfully.",
-            "files": list_directory(payload),
+            "files": list_directory(payload)["files"],
         }
     except Exception as e:
         return {

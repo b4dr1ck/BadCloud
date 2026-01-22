@@ -5,6 +5,7 @@ export default {
   name: "App",
   data() {
     return {
+      totalSize: 0,
       currentDirectory: [],
       checkedFiles: [],
       typeIcons: {
@@ -55,7 +56,7 @@ export default {
 
     // fetch initial file list
     this.fetchData({ task: "list" }, (data) => {
-      this.fileList = data;
+      this.fileList = data.files;
     });
   },
 
@@ -82,6 +83,9 @@ export default {
             this.dialog = true;
             this.snackbar = false;
             return;
+          }
+          if (data.totalSize) {
+            this.totalSize = data.totalSize;
           }
           callback(data);
         })
@@ -158,7 +162,7 @@ export default {
       };
 
       this.fetchData(body, (data) => {
-        this.fileList = data;
+        this.fileList = data.files;
       });
     },
     deleteFile(_event, filename, isFolder) {
@@ -298,7 +302,7 @@ export default {
   </v-row>
 
   <!-- Options-->
-  <div class="d-flex align-center ma-2">
+  <div class="d-flex align-center mx-2">
     <v-btn @click="openPrompt($event, 'create_folder')" class="ma-1" title="Create Folder"
       ><v-icon icon="mdi-folder-plus"></v-icon
     ></v-btn>
@@ -326,6 +330,14 @@ export default {
     </div>
   </v-row>
 
+  <!--DiskSpace Info-->
+  <div class="d-flex">
+    <pre class="mx-2"
+      >{{ parseFloat(totalSize[0] / 1000000).toFixed(2) }} / {{ parseFloat(totalSize[1] / 1000000).toFixed(2) }} MB</pre
+    >
+    <v-progress-linear class="ma-2" :max="totalSize[1]" v-model="totalSize[0]"></v-progress-linear>
+  </div>
+
   <!-- File List Data-Table -->
   <v-row v-if="fileList.length > 0" class="ma-2">
     <v-card height="100%" width="100%">
@@ -343,6 +355,7 @@ export default {
             <!-- Last Column: "Select All Checkbox"-->
             <template v-for="column in columns" :key="column.key">
               <th v-if="column.key === 'options'" class="d-flex align-center justify-end">
+                <p class="text-h6">All</p>
                 <v-checkbox
                   @update:model-value="selectAllFiles($event)"
                   title="Select"
