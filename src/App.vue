@@ -283,6 +283,9 @@ export default {
       }
       this.checkedFiles = this.fileList.map((file) => file.filename);
     },
+    reloadPage(_event) {
+      location.reload();
+    },
   },
 };
 </script>
@@ -448,7 +451,7 @@ export default {
       <v-dialog v-model="dialog" width="auto">
         <v-card prepend-icon="mdi-alert" :text="errorMsg" :title="errorTitle">
           <template v-slot:actions>
-            <v-btn class="ms-auto" text="Ok" @click="dialog = false"></v-btn>
+            <v-btn class="ms-auto" text="Ok" @click="reloadPage()"></v-btn>
           </template>
         </v-card>
       </v-dialog>
