@@ -314,6 +314,10 @@ export default {
       single-line></v-text-field>
   </div>
 
+  <!-- Progress Bar-->
+  <v-progress-linear height="16" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
+  <v-spacer class="py-2" v-else></v-spacer>
+
   <!--Path-->
   <v-row class="ma-2 path">
     <div @click="changeDir($event, dir, true)">/</div>
@@ -321,8 +325,6 @@ export default {
       {{ dir }}/
     </div>
   </v-row>
-
-  <v-progress-linear height="15" v-if="loading" indeterminate color="deep-purple accent-4"></v-progress-linear>
 
   <!-- File List Data-Table -->
   <v-row v-if="fileList.length > 0" class="ma-2">
@@ -338,7 +340,7 @@ export default {
         <!-- Table Header-->
         <template v-slot:headers="{ columns, isSorted, getSortIcon, toggleSort }">
           <tr>
-            <!-- Last Column "Select All Checkbox"-->
+            <!-- Last Column: "Select All Checkbox"-->
             <template v-for="column in columns" :key="column.key">
               <th v-if="column.key === 'options'" class="d-flex align-center justify-end">
                 <v-checkbox
@@ -347,7 +349,7 @@ export default {
                   value="all"
                   class="mt-5"></v-checkbox>
               </th>
-              <!-- Columns-->
+              <!-- Other Columns-->
               <th v-else class="text-purple-lighten-2 cursor-pointer" @click="toggleSort(column)">
                 <div class="d-flex align-center">
                   <span class="me-2" v-text="column.title.toUpperCase()"></span>
@@ -374,6 +376,7 @@ export default {
             <td>{{ item.created }}</td>
             <!--Options-->
             <td class="d-flex align-center justify-end">
+              <!--For Folders-->
               <template v-if="item.isFolder">
                 <v-btn @click="changeDir($event, item.filename)" title="Enter" icon class="mr-2"
                   ><v-icon icon="mdi-location-enter"></v-icon
@@ -394,6 +397,7 @@ export default {
                 </v-btn>
                 <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
               </template>
+              <!--For Files-->
               <template v-else>
                 <v-btn @click="downloadFiles($event, item.filename)" title="Download" icon class="mr-2">
                   <v-icon icon="mdi-download"></v-icon>
@@ -429,7 +433,7 @@ export default {
   <template>
     <div class="text-center pa-4">
       <v-dialog v-model="dialog" width="auto">
-        <v-card max-width="600" prepend-icon="mdi-alert" :text="errorMsg" :title="errorTitle">
+        <v-card prepend-icon="mdi-alert" :text="errorMsg" :title="errorTitle">
           <template v-slot:actions>
             <v-btn class="ms-auto" text="Ok" @click="dialog = false"></v-btn>
           </template>
@@ -441,12 +445,12 @@ export default {
   <!-- Prompt-->
   <template>
     <div class="text-center pa-4">
-      <v-dialog v-model="prompt" width="auto">
-        <v-card width="400" prepend-icon="mdi-information" :text="promptMsg" :title="promptTitle">
+      <v-dialog min-width="300" v-model="prompt" width="auto">
+        <v-card prepend-icon="mdi-information" :text="promptMsg" :title="promptTitle">
           <v-card-text class="py-0 ma-0">
             <v-text-field
               v-model="newPromptValue"
-              label="Folder Name"
+              label="New Value"
               variant="outlined"
               density="compact"
               hide-details></v-text-field>
@@ -473,7 +477,7 @@ export default {
 }
 
 .v-table__wrapper {
-  overflow: hidden !important; /* Disable table scrolling */
+  overflow-y: hidden !important; /* Disable table scrolling */
 }
 
 .v-table__wrapper tr:nth-of-type(odd) {
@@ -495,5 +499,23 @@ export default {
 .path div:hover {
   cursor: pointer;
   text-decoration: underline;
+}
+
+@media screen and (max-width: 600px) {
+  .v-table__wrapper th:nth-of-type(2),
+  .v-table__wrapper th:nth-of-type(3),
+  .v-table__wrapper th:nth-of-type(4) {
+    display: none;
+  }
+
+  .v-table__wrapper td:nth-of-type(2),
+  .v-table__wrapper td:nth-of-type(3),
+  .v-table__wrapper td:nth-of-type(4) {
+    display: none;
+  }
+
+  .v-input {
+    max-width: 100% !important;
+  }
 }
 </style>
