@@ -231,6 +231,10 @@ export default {
         files: [],
       };
 
+      if (files.length === 0) {
+        return;
+      }
+
       const filesPromises = Array.from(files).map((file) => {
         return new Promise((resolve, reject) => {
           const fr = new FileReader();

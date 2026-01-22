@@ -180,6 +180,16 @@ def upload_files(payload):
 
         filecontent = base64.b64decode(filecontent)
         file_path = os.path.join(absolute_path, filename)
+        
+        if os.path.exists(file_path):
+            try:
+              os.rename(file_path,f'{file_path}_{datetime.datetime.now().strftime("%Y%m%d%H%M%s")}')
+            except:
+              return {
+                  "status": "error",
+                  "message": f"Can not rename File {file_path}",
+                  "files": list_directory(payload)["files"],
+              }
 
         with open(file_path, "wb") as file:
             file.write(filecontent)
