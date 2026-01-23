@@ -477,7 +477,13 @@ export default {
           </v-card-text>
           <template v-slot:actions>
             <div>
-              <v-btn class="ms-auto" text="Ok" @click="promptCallback(), (prompt = false)"></v-btn>
+              <v-btn
+                class="ms-auto"
+                text="Ok"
+                @click="
+                  promptCallback();
+                  prompt = false;
+                "></v-btn>
               <v-btn class="ms-auto" text="Cancel" @click="prompt = false"></v-btn>
             </div>
           </template>
