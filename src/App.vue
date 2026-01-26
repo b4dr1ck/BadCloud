@@ -510,6 +510,13 @@ export default {
   background-color: #1e1e1e !important;
 }
 
+.v-table__wrapper td:nth-of-type(1) {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .v-table__wrapper td:nth-of-type(1):hover {
   cursor: pointer;
   text-decoration: underline;
