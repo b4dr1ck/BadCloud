@@ -292,7 +292,7 @@ def renameFile(payload):
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 
     old_filename = payload.get("old_filename", "")
-    new_filename = payload.get("new_filename", "")
+    new_filename = os.path.basename(payload.get("new_filename", "")) # Prevent path traversal
 
     old_file_path = os.path.join(absolute_path, old_filename)
     new_file_path = os.path.join(absolute_path, new_filename)
