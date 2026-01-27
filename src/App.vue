@@ -358,16 +358,17 @@ export default {
         :items-per-page="-1">
         <!-- Table Header-->
         <template v-slot:headers="{ columns, isSorted, getSortIcon, toggleSort }">
-          <tr>
+          <tr class="">
             <!-- Last Column: "Select All Checkbox"-->
             <template v-for="column in columns" :key="column.key">
-              <th v-if="column.key === 'options'" class="d-flex align-center justify-end">
+              <th v-if="column.key === 'options'" class="d-flex align-center justify-end pa-0">
                 <p class="text-h6">All</p>
                 <v-checkbox
                   @update:model-value="selectAllFiles($event)"
+                  hide-details
+                  density="compact"
                   title="Select"
-                  value="all"
-                  class="mt-5"></v-checkbox>
+                  value="all"></v-checkbox>
               </th>
               <!-- Other Columns-->
               <th v-else class="text-purple-lighten-2 cursor-pointer" @click="toggleSort(column)">
@@ -395,10 +396,10 @@ export default {
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
             <!--Options-->
-            <td class="d-flex align-center justify-end">
+            <td class="d-flex align-center justify-end pa-0">
               <!--For Folders-->
               <template v-if="item.isFolder">
-                <v-btn @click="changeDir($event, item.filename)" title="Enter" icon class="mr-2"
+                <v-btn @click="changeDir($event, item.filename)" title="Enter" icon class=""
                   ><v-icon icon="mdi-location-enter"></v-icon
                 ></v-btn>
                 <v-btn
@@ -415,11 +416,16 @@ export default {
                   icon>
                   <v-icon icon="mdi-rename"></v-icon>
                 </v-btn>
-                <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
+                <v-checkbox
+                  title="Select"
+                  hide-details
+                  density="compact"
+                  :value="item.filename"
+                  v-model="checkedFiles"></v-checkbox>
               </template>
               <!--For Files-->
               <template v-else>
-                <v-btn @click="downloadFiles($event, item.filename)" title="Download" icon class="mr-2">
+                <v-btn @click="downloadFiles($event, item.filename)" title="Download" icon class="">
                   <v-icon icon="mdi-download"></v-icon>
                 </v-btn>
                 <v-btn @click="deleteFile($event, item.filename, item.isFolder)" title="Delete" icon>
@@ -428,7 +434,12 @@ export default {
                 <v-btn @click="openPrompt($event, 'rename_file', item.filename)" title="Rename" icon>
                   <v-icon icon="mdi-rename"></v-icon>
                 </v-btn>
-                <v-checkbox title="Select" :value="item.filename" class="mt-5 ml-2" v-model="checkedFiles"></v-checkbox>
+                <v-checkbox
+                  title="Select"
+                  hide-details
+                  density="compact"
+                  :value="item.filename"
+                  v-model="checkedFiles"></v-checkbox>
               </template>
             </td>
           </tr>
