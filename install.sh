@@ -40,7 +40,7 @@ cd $repo_dir || {
   exit 3
 }
 
-git pull origin master
+git pull origin main
 rtcCheck $?
 
 echo "* Install dependencies and build project"
