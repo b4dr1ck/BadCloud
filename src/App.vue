@@ -5,6 +5,7 @@ export default {
   name: "App",
   data() {
     return {
+      mobile: false,
       totalSize: 0,
       currentDirectory: [],
       checkedFiles: [],
@@ -49,6 +50,11 @@ export default {
   },
 
   mounted() {
+    // detect mobile device
+    this.mobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth <= 768;
+
     // set URL for production
     if (!import.meta.env.DEV) {
       this.url = location.href + "fileRequest.py";
@@ -396,25 +402,48 @@ export default {
             <td>{{ item.size }}</td>
             <td>{{ item.created }}</td>
             <!--Options-->
-            <td class="d-flex align-center justify-end pa-0">
+            <!-- Mobile View: Dropdown Menu-->
+            <td v-if="mobile" class="d-flex align-center justify-end pa-0">
+              <v-menu>
+                <template v-slot:activator="{ props }">
+                  <v-btn icon="mdi-dots-vertical" density="compact" v-bind="props"> </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item @click="downloadFiles($event, item.filename)">
+                    <v-list-item-title>Download</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="deleteFile($event, item.filename, item.isFolder)">
+                    <v-list-item-title>Delete</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="openPrompt($event, 'rename_file', item.filename)">
+                    <v-list-item-title>Rename</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <v-checkbox
+                title="Select"
+                hide-details
+                density="compact"
+                :value="item.filename"
+                v-model="checkedFiles"></v-checkbox>
+            </td>
+            <!-- Desktop View: Buttons-->
+            <td v-else class="d-flex align-center justify-end pa-0">
               <!--For Folders-->
               <template v-if="item.isFolder">
-                <v-btn @click="changeDir($event, item.filename)" title="Enter" icon class=""
-                  ><v-icon icon="mdi-location-enter"></v-icon
-                ></v-btn>
+                <v-btn @click="changeDir($event, item.filename)" title="Enter" icon="mdi-location-enter" class="">
+                </v-btn>
                 <v-btn
                   v-if="item.filename !== '..'"
                   @click="deleteFile($event, item.filename, item.isFolder)"
                   title="Delete"
-                  icon>
-                  <v-icon icon="mdi-delete"></v-icon>
+                  icon="mdi-delete">
                 </v-btn>
                 <v-btn
                   v-if="item.filename !== '..'"
                   @click="openPrompt($event, 'rename_file', item.filename)"
                   title="Rename"
-                  icon>
-                  <v-icon icon="mdi-rename"></v-icon>
+                  icon="mdi-rename">
                 </v-btn>
                 <v-checkbox
                   title="Select"
@@ -509,10 +538,6 @@ export default {
   color: #2196f3 !important;
 }
 
-.v-list-item {
-  display: none !important; /* Hide the list items */
-}
-
 .v-table__wrapper {
   overflow-y: hidden !important; /* Disable table scrolling */
 }
@@ -543,6 +568,10 @@ export default {
 .path div:hover {
   cursor: pointer;
   text-decoration: underline;
+}
+
+.v-file-upload-items {
+  display: none !important;
 }
 
 @media screen and (max-width: 600px) {
