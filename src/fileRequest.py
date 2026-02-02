@@ -136,7 +136,7 @@ def total_size(path):
         for file in files:
             total += os.path.getsize(os.path.join(root, file))
     return total
-  
+
 
 def check_total_size(path):
     if total_size(path) > MAX_TOTAL_SIZE:
@@ -180,16 +180,19 @@ def upload_files(payload):
 
         filecontent = base64.b64decode(filecontent)
         file_path = os.path.join(absolute_path, filename)
-        
+
         if os.path.exists(file_path):
             try:
-              os.rename(file_path,f'{file_path}_{datetime.datetime.now().strftime("%Y%m%d%H%M%s")}')
+                os.rename(
+                    file_path,
+                    f'{file_path}_{datetime.datetime.now().strftime("%Y%m%d%H%M%s")}',
+                )
             except:
-              return {
-                  "status": "error",
-                  "message": f"Can not rename File {file_path}",
-                  "files": list_directory(payload)["files"],
-              }
+                return {
+                    "status": "error",
+                    "message": f"Can not rename File {file_path}",
+                    "files": list_directory(payload)["files"],
+                }
 
         with open(file_path, "wb") as file:
             file.write(filecontent)
@@ -292,7 +295,9 @@ def renameFile(payload):
         absolute_path = os.path.join(UPLOAD_DIR, dir)
 
     old_filename = payload.get("old_filename", "")
-    new_filename = os.path.basename(payload.get("new_filename", "")) # Prevent path traversal
+    new_filename = os.path.basename(
+        payload.get("new_filename", "")
+    )  # Prevent path traversal
 
     old_file_path = os.path.join(absolute_path, old_filename)
     new_file_path = os.path.join(absolute_path, new_filename)
@@ -302,6 +307,33 @@ def renameFile(payload):
         return {
             "status": "success",
             "message": f"File '{old_filename}' renamed to '{new_filename}' successfully.",
+            "files": list_directory(payload)["files"],
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+        }
+
+
+def moveFile(payload):
+    dir = payload.get("dir")
+    absolute_path = UPLOAD_DIR
+
+    if dir:
+        absolute_path = os.path.join(UPLOAD_DIR, dir)
+
+    files = payload.get("files", [])
+
+    try:
+        for file in files:
+            os.rename(
+                UPLOAD_DIR + "/" + file,
+                os.path.join(absolute_path, os.path.basename(file)),
+            )
+        return {
+            "status": "success",
+            "message": f"File(s) moved successfully.",
             "files": list_directory(payload)["files"],
         }
     except Exception as e:
@@ -324,6 +356,7 @@ if __name__ == "__main__":
         "delete": delete_files,
         "create_folder": createFolder,
         "rename_file": renameFile,
+        "move": moveFile,  # Placeholder for future implementation
     }
 
     print_headers()

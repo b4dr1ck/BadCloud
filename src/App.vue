@@ -6,6 +6,7 @@ export default {
   data() {
     return {
       mobile: false,
+      moveFilesList: [],
       totalSize: 0,
       currentDirectory: [],
       checkedFiles: [],
@@ -291,7 +292,34 @@ export default {
         this.checkedFiles = [];
         return;
       }
-      this.checkedFiles = this.fileList.map((file) => file.filename);
+      this.checkedFiles = this.fileList.map((file) => (file.filename !== ".." ? file.filename : null)).filter(Boolean);
+    },
+
+    moveFiles(_event, filename) {
+      this.moveFilesList = [this.currentDirectory.join("/") + "/" + filename];
+      if (this.checkedFiles.length > 0) {
+        this.moveFilesList = this.checkedFiles.map((file) => this.currentDirectory.join("/") + "/" + file);
+      }
+      this.snackbar = true;
+      this.log = `Selected files for moving. Navigate to the target directory and click 'Paste'.`;
+    },
+    pasteFiles(_event) {
+      if (this.moveFilesList.length === 0) {
+        return;
+      }
+
+      const body = {
+        task: "move",
+        files: this.moveFilesList,
+        dir: this.currentDirectory.join("/"),
+      };
+
+      this.fetchData(body, (data) => {
+        this.fileList = data.files;
+        this.snackbar = true;
+        this.log = `Files moved successfully.`;
+        this.moveFilesList = [];
+      });
     },
     reloadPage(_event) {
       location.reload();
@@ -316,9 +344,17 @@ export default {
 
   <!-- Options-->
   <div class="d-flex align-center mx-2">
-    <v-btn @click="openPrompt($event, 'create_folder')" class="ma-1" title="Create Folder"
-      ><v-icon icon="mdi-folder-plus"></v-icon
-    ></v-btn>
+    <v-btn
+      @click="openPrompt($event, 'create_folder')"
+      class="ma-1"
+      title="Create Folder"
+      icon="mdi-folder-plus"></v-btn>
+    <v-btn
+      :disabled="moveFilesList.length === 0"
+      @click="pasteFiles($event)"
+      class="ma-1"
+      title="Paste Files"
+      icon="mdi-content-paste"></v-btn>
     <v-text-field
       v-model="search"
       label="Search in current directory"
@@ -408,7 +444,18 @@ export default {
                 <template v-slot:activator="{ props }">
                   <v-btn icon="mdi-dots-vertical" density="compact" v-bind="props"> </v-btn>
                 </template>
-                <v-list>
+                <v-list v-if="item.isFolder">
+                  <v-list-item @click="deleteFile($event, item.filename, item.isFolder)">
+                    <v-list-item-title>Delete</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="openPrompt($event, 'rename_file', item.filename)">
+                    <v-list-item-title>Rename</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="moveFiles($event, item.filename)">
+                    <v-list-item-title>Move</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+                <v-list v-else>
                   <v-list-item @click="downloadFiles($event, item.filename)">
                     <v-list-item-title>Download</v-list-item-title>
                   </v-list-item>
@@ -418,9 +465,13 @@ export default {
                   <v-list-item @click="openPrompt($event, 'rename_file', item.filename)">
                     <v-list-item-title>Rename</v-list-item-title>
                   </v-list-item>
+                  <v-list-item @click="moveFiles($event, item.filename)">
+                    <v-list-item-title>Move</v-list-item-title>
+                  </v-list-item>
                 </v-list>
               </v-menu>
               <v-checkbox
+                v-if="item.filename !== '..'"
                 title="Select"
                 hide-details
                 density="compact"
@@ -445,7 +496,10 @@ export default {
                   title="Rename"
                   icon="mdi-rename">
                 </v-btn>
+                <v-btn title="Move Files" @click="moveFiles($event, item.filename)" icon="mdi-file-move-outline">
+                </v-btn>
                 <v-checkbox
+                  v-if="item.filename !== '..'"
                   title="Select"
                   hide-details
                   density="compact"
@@ -462,6 +516,8 @@ export default {
                 </v-btn>
                 <v-btn @click="openPrompt($event, 'rename_file', item.filename)" title="Rename" icon>
                   <v-icon icon="mdi-rename"></v-icon>
+                </v-btn>
+                <v-btn title="Move Files" @click="moveFiles($event, item.filename)" icon="mdi-file-move-outline">
                 </v-btn>
                 <v-checkbox
                   title="Select"
