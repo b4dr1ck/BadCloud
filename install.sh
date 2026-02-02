@@ -60,5 +60,7 @@ rm -rv "${destination_dir}/assets/"
 rtcCheck $?
 
 cp -rv ./* "$destination_dir/"
+
+cp ../src/fileRequest.py "${destination_dir}/fileRequest.py"
 rtcCheck $?
 
