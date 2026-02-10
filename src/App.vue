@@ -561,10 +561,11 @@ export default {
   <!-- Prompt-->
   <template>
     <div class="text-center pa-4">
-      <v-dialog min-width="300" v-model="prompt" width="auto">
-        <v-card prepend-icon="mdi-information" :text="promptMsg" :title="promptTitle">
+      <v-dialog min-width="400" v-model="prompt" width="auto">
+        <v-card density="compact" prepend-icon="mdi-information" :text="promptMsg" :title="promptTitle">
           <v-card-text class="py-0 ma-0">
             <v-text-field
+            class="pa-0 ma-0"
               v-model="newPromptValue"
               label="New Value"
               variant="outlined"
