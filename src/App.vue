@@ -430,10 +430,8 @@ export default {
               <v-icon class="text-green" icon="mdi-folder"></v-icon
               ><v-btn class="text-none text-green" @click="changeDir($event, item.filename)">{{ item.filename }}</v-btn>
             </td>
-            <td @click="downloadFiles($event, item.filename)" v-else class="text-blue font-weight-bold">
-              <v-icon v-if="item.filetype !== 'image'" class="text-white" :icon="typeIcons[item.filetype]"></v-icon>
-              <!--Image Preview-->
-              <img v-else :src="item.content" alt="Image Preview" width="32" height="32" class="me-2 rounded" />
+            <td @click="openPrompt($event, 'rename_file', item.filename)" v-else class="text-blue font-weight-bold">
+              <v-icon class="text-white" :icon="typeIcons[item.filetype]"></v-icon>
               {{ item.filename }}
             </td>
             <td>{{ item.filetype }}</td>
@@ -563,7 +561,7 @@ export default {
   <!-- Prompt-->
   <template>
     <div class="text-center pa-4">
-      <v-dialog min-width="400" v-model="prompt" width="auto">
+      <v-dialog min-width="300" v-model="prompt" width="auto">
         <v-card prepend-icon="mdi-information" :text="promptMsg" :title="promptTitle">
           <v-card-text class="py-0 ma-0">
             <v-text-field
