@@ -83,7 +83,12 @@ def list_directory(payload):
         created = datetime.datetime.fromtimestamp(
             os.path.getctime(os.path.join(absolute_path, f))
         ).strftime("%Y-%m-%d %H:%M:%S")
+        encoded_content = ""
         ifFolder = True if os.path.isdir(os.path.join(absolute_path, f)) else False
+        if not ifFolder:
+            file_data = open(os.path.join(absolute_path, f), "rb").read()
+            encoded_content = base64.b64encode(file_data).decode("utf-8")
+
         filetype = (
             "folder"
             if ifFolder
@@ -96,6 +101,7 @@ def list_directory(payload):
 
         files_info.append(
             {
+                "content": f"data:;base64,{encoded_content}",
                 "filename": f,
                 "size": size,
                 "created": created,
